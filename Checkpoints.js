@@ -16,10 +16,10 @@ class Checkpoints {
   }
 
   draw() {
-    if (!SHOW_CHECKPOINTS) return;
-    for (let checkpoint of this.checkpoints) {
+    if (!DEBUG_CHECKPOINTS) return;
+    this.checkpoints.forEach((checkpoint) => {
       circle(checkpoint.x, checkpoint.y, this.r);
-    }
+    });
   }
 
   hit(car) {
@@ -33,7 +33,7 @@ class Checkpoints {
   }
 
   save() {
-    saveJSON(this.checkpoints, 'points.json');
+    saveJSON(this.checkpoints, 'checkpoints.json');
   }
 
 }
