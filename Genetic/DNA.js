@@ -1,29 +1,16 @@
-const MAX_TURN_ANGLE = 0.05; // 360 * 0.05 = 18
-const SPEED = 2;
 const MUTATION_RATE = 0.05;
-
-let DNATotal;
-let DNATable;
-
-function genDNATable() {
-  for (DNATotal = 1e6, DNATable = []; DNATotal--;) {
-    DNATable.push(random(-MAX_TURN_ANGLE, MAX_TURN_ANGLE));
-  }
-}
-
-function lookup() {
-  return ++DNATotal >= DNATable.length ? DNATable[DNATotal = 0] : DNATable[DNATotal];
-}
+const NATURAL_SELECTION_CHANCE = 6; // 600%
 
 class DNA {
-  constructor() {
-  }
-
   gen(age) {
     this.genes = [];
     for (let j = 0; j < age * 5; j++) { // less move for faster speed
       this.genes.push(lookup());
     }
+  }
+
+  load(genes) {
+    this.genes = genes;
   }
 
   crossover(partner, partner_age) {
@@ -42,14 +29,20 @@ class DNA {
       newDNA.genes.push(lookup());
     }
 
+    // mutate
+    let tempGenes = this.mutate([...newDNA.genes]);
+    newDNA.genes = tempGenes;
+
     return newDNA;
   }
 
-  mutate() {
-    for (let i = 0; i < this.genes.length; i++) {
+  mutate(genes) {
+    for (let i = 0; i < genes.length; i++) {
       if (random(1) < MUTATION_RATE) {
-        this.genes[i] = lookup();
+        genes[i] = lookup();
       }
     }
+
+    return genes;
   }
 }

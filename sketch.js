@@ -2,16 +2,16 @@
 // I do a lot of p5.js stuff that might interest you!
 
 // genetic algorithm
-const POPULATION_COUNT = 1000;
-let population = [];
+const POPULATION_COUNT = 500;
+let population;
 let matingPool = [];
 let generationCount = 0;
 let best = null;
 let bestFitness = -1;
 
 // deep learning
-const DL_POPULATION_COUNT = 100;
-let dl_population = [];
+const DL_POPULATION_COUNT = 50;
+let dl_population;
 let dl_matingPool = [];
 let dl_generationCount = 0;
 let dl_best = null;
@@ -19,6 +19,7 @@ let dl_bestFitness = -1;
 
 let trackImg;
 let carImg;
+let dl_carImg;
 
 let checkpoints;
 const DEBUG_CHECKPOINTS = false;
@@ -27,26 +28,42 @@ function preload() {
   loadJSON("checkpoints.json", setupCheckpoints);
   trackImg = loadImage('track1.png');
   carImg = loadImage('car.png');
+  dl_carImg = loadImage('dl_car.png');
+
+  loadJSON('http://' + window.location.host + '/Genetic/best_dna.json', genCar);
+
+  getDLCar();
 }
 
 function setupCheckpoints(points) {
   checkpoints = new Checkpoints(points);
 }
 
-async function setup() {
+function setup() {
   createCanvas(800, 800);
+}
 
-  // gen car
+function genCar(bestDna) {
+  population = [];
+
   genDNATable();
   for (let i = 0; i < POPULATION_COUNT; i++) {
     let car = new GeneticCar();
-    car.dna.gen(100);
+    if (bestDna != null) {
+      car.dna.load(bestDna.genes);
+    } else {
+      car.dna.gen(100);
+    }
     population.push(car);
   }
+  naturalSelection();
+}
 
-  // gen car
+async function getDLCar() {
+  dl_population = [];
+
   // load pre-train model
-  const model = await tf.loadLayersModel('http://127.0.0.1:8887/DeepLearning/best_model.json');
+  let model = await tf.loadLayersModel('http://' + window.location.host + '/DeepLearning/best_model.json');
   for (let i = 0; i < DL_POPULATION_COUNT; i++) {
     dl_population.push(new DeepLearningCar(model));
   }
@@ -80,6 +97,8 @@ function draw() {
           if (pixelRgb[0] !== 147 && pixelRgb[0] !== 110) {
             car.alive = false;
             car.calcFitness();
+            if (random(1) < 0.5) // some have pre crossover
+              car.preDNA = crossover(car);
           }
         } catch (error) {
         }
@@ -101,13 +120,15 @@ function draw() {
 
     // show status
     textSize(20);
-    text(`Best age (fitness): ${best && best.age ? best.age : 0} ${best && best.fitness ? best.fitness : 0}`, 25, height - 110);
-    text(`Best Distance: ${best && best.currentCheckpoint ? best.currentCheckpoint : 0}`, 25, height - 80);
+    if (best) {
+      text(`Best checkpoint & fitness: ${best.currentCheckpoint} ${best.fitness}`, 25, height - 110);
+      text(`Best age: ${best.age}`, 25, height - 80);
+    }
     text(`Generation: ${generationCount}`, 25, height - 50);
-    text(`Population: ${population.length} Mutation Rate: ${MUTATION_RATE * 100}%`, 25, height - 20);
+    text(`Population: ${population.length} Mutation: ${MUTATION_RATE}`, 25, height - 20);
   } else { // game end
     naturalSelection();
-    reproduce();
+    reproduceAll();
 
     generationCount++;
   }
@@ -141,12 +162,14 @@ function draw() {
 
     // show status
     textSize(20);
-    text(`DL Best age: ${dl_best && dl_best.age ? dl_best.age : 0}`, 525, height - 80);
-    text(`DL Generation: ${dl_generationCount}`, 525, height - 50);
-    text(`DL Population: ${dl_population.length} Mutation Rate: ${DL_MUTATION_RATE * 100}%`, 525, height - 20);
+    if (dl_best) {
+      text(`DL Best age: ${dl_best.age}`, 325, height - 80);
+    }
+    text(`DL Generation: ${dl_generationCount}`, 325, height - 50);
+    text(`DL Population: ${dl_population.length} Mutation: ${DL_MUTATION_RATE}`, 325, height - 20);
   } else { // game end
     dl_naturalSelection();
-    dl_reproduce();
+    dl_reproduceAll();
 
     dl_generationCount++;
   }
@@ -165,29 +188,9 @@ function naturalSelection() {
 
   if (best) {
     // add a big chance for mating
-    for (let i = 0; i < POPULATION_COUNT * 2; i++) {
+    for (let i = 0; i < POPULATION_COUNT * NATURAL_SELECTION_CHANCE; i++) {
       matingPool.push(best);
     }
-  }
-}
-
-function reproduce() {
-  for (let i = 0; i < POPULATION_COUNT; i++) {
-    let mummyIndex = floor(random(matingPool.length));
-    let daddyIndex = floor(random(matingPool.length));
-
-    let mummy = matingPool[mummyIndex];
-    let daddy = matingPool[daddyIndex];
-
-    let child = new GeneticCar();
-    child.dna = mummy.dna.crossover(daddy.dna, daddy.age);
-    child.dna.mutate();
-    population[i] = child;
-  }
-
-  // debug
-  if (best) {
-    population[0].genotype = best.genotype; // always have 1 previous best
   }
 }
 
@@ -204,21 +207,45 @@ function dl_naturalSelection() {
 
   if (dl_best) {
     // add a big chance for mating
-    for (let i = 0; i < DL_POPULATION_COUNT * 2; i++) {
+    for (let i = 0; i < DL_POPULATION_COUNT * DL_NATURAL_SELECTION_CHANCE; i++) {
       dl_matingPool.push(dl_best);
     }
   }
 }
 
-function dl_reproduce() {
+function crossover(mummy) {
+  let daddyIndex = floor(random(matingPool.length));
+  let daddy = matingPool[daddyIndex];
+
+  return mummy.dna.crossover(daddy.dna, daddy.age);
+}
+
+function reproduceAll() {
+  for (let i = 0; i < POPULATION_COUNT; i++) {
+    let mummyIndex = floor(random(matingPool.length));
+    let mummy = matingPool[mummyIndex];
+
+    let child = new GeneticCar();
+    if (mummy.preDNA != null) { // skip pre crossover
+      child.dna = mummy.preDNA;
+    } else {
+      child.dna = crossover(mummy);
+    }
+    population[i] = child;
+  }
+
+  // debug
+  if (best) {
+    population[0].dna = best.dna; // always have 1 previous best
+  }
+}
+
+function dl_reproduceAll() {
   for (let i = 0; i < DL_POPULATION_COUNT; i++) {
     let historyIndex = floor(random(dl_matingPool.length));
     let history = dl_matingPool[historyIndex];
 
-    let future = new DeepLearningCar();
-    if (history != null) {
-      future.experience = history.experience.copy();
-    }
+    let future = new DeepLearningCar(history.experience.copy().model);
     future.experience.mutate();
     dl_population[i] = future;
   }
@@ -234,13 +261,14 @@ function mousePressed() {
 }
 
 function keyPressed() {
+  console.log(key);
   if (key == 's' || key == 'S') {
     checkpoints.save();
   } else if (key === 'Backspace') {
     checkpoints.delete();
   } else if (key === 'Enter') {
     if (best)
-      saveJSON(best.genotype, 'best_genotype.json');
+      saveJSON(best.dna, 'best_dna.json');
     if (dl_best)
       dl_best.experience.model.save('downloads://best_model');
   }

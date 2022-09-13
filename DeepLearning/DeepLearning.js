@@ -1,22 +1,23 @@
 const DL_MUTATION_RATE = 0.05;
+const DL_NATURAL_SELECTION_CHANCE = 6; // 600%
 
 class DeepLearning {
-  constructor(a, b, c, d) {
-    if (a instanceof tf.Sequential) {
-      this.inputNodes = b;
-      this.hiddenNodes = c;
-      this.outputNodes = d;
-      this.model = a;
+  constructor(inputNodes, hiddenNodes, outputNodes, model) {
+    if (null != model && model instanceof tf.Sequential) {
+      this.inputNodes = inputNodes;
+      this.hiddenNodes = hiddenNodes;
+      this.outputNodes = outputNodes;
+      this.model = model;
     } else {
-      this.inputNodes = a;
-      this.hiddenNodes = b;
-      this.outputNodes = c;
+      this.inputNodes = inputNodes;
+      this.hiddenNodes = hiddenNodes;
+      this.outputNodes = outputNodes;
       this.model = this.createModel(tf.sequential());
     }
   }
 
   createModel(model) {
-    const hidden = tf.layers.dense({
+    let hidden = tf.layers.dense({
       units: this.hiddenNodes,
       inputShape: [this.inputNodes],
       activation: 'sigmoid'
@@ -24,7 +25,7 @@ class DeepLearning {
 
     model.add(hidden);
 
-    const output = tf.layers.dense({
+    let output = tf.layers.dense({
       units: this.outputNodes,
       activation: 'softmax'  // makes sure the values add up to 1
     });
@@ -36,27 +37,27 @@ class DeepLearning {
   }
 
   predict(inputs) {
-    const xs = tf.tensor2d([inputs]);
-    const ys = this.model.predict(xs);
-    const outputs = ys.dataSync();
+    let xs = tf.tensor2d([inputs]);
+    let ys = this.model.predict(xs);
+    let outputs = ys.dataSync();
     //console.log(outputs);
     return outputs;
   }
 
   copy() {
-    const modelCopy = this.createModel(tf.sequential());
-    const weights = this.model.getWeights();
-    const weightCopies = [];
+    let modelCopy = this.createModel(tf.sequential());
+    let weights = this.model.getWeights();
+    let weightCopies = [];
     for (let i = 0; i < weights.length; i++) {
       weightCopies[i] = weights[i].clone();
     }
     modelCopy.setWeights(weightCopies);
-    return new DeepLearning(modelCopy, this.inputNodes, this.hiddenNodes, this.outputNodes);
+    return new DeepLearning(this.inputNodes, this.hiddenNodes, this.outputNodes, modelCopy);
   }
 
   mutate() {
-    const weights = this.model.getWeights();
-    const mutatedWeights = [];
+    let weights = this.model.getWeights();
+    let mutatedWeights = [];
 
     for (let i = 0; i < weights.length; i++) {
       let tensor = weights[i];
