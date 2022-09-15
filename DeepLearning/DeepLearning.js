@@ -3,7 +3,7 @@ const DL_NATURAL_SELECTION_CHANCE = 6; // 600%
 
 class DeepLearning {
   constructor(inputNodes, hiddenNodes, outputNodes, model) {
-    if (null != model && model instanceof tf.Sequential) {
+    if (model && model instanceof tf.Sequential) {
       this.inputNodes = inputNodes;
       this.hiddenNodes = hiddenNodes;
       this.outputNodes = outputNodes;

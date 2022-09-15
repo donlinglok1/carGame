@@ -30,7 +30,7 @@ function preload() {
   carImg = loadImage('car.png');
   dl_carImg = loadImage('dl_car.png');
 
-  loadJSON(location.protocol + '//' + window.location.host + '/Genetic/best_dna.json', genCar);
+  loadJSON('./Genetic/best_dna.json', genCar);
 
   getDLCar();
 }
@@ -49,7 +49,7 @@ function genCar(bestDna) {
   genDNATable();
   for (let i = 0; i < POPULATION_COUNT; i++) {
     let car = new GeneticCar();
-    if (bestDna != null) {
+    if (bestDna) {
       car.dna.load(bestDna.genes);
     } else {
       car.dna.gen(100);
@@ -63,7 +63,7 @@ async function getDLCar() {
   dl_population = [];
 
   // load pre-train model
-  let model = await tf.loadLayersModel(location.protocol + '//' + window.location.host + '/DeepLearning/best_model.json');
+  let model = await tf.loadLayersModel('./DeepLearning/best_model.json');
   for (let i = 0; i < DL_POPULATION_COUNT; i++) {
     dl_population.push(new DeepLearningCar(model));
   }
@@ -226,7 +226,7 @@ function reproduceAll() {
     let mummy = matingPool[mummyIndex];
 
     let child = new GeneticCar();
-    if (mummy.preDNA != null) { // skip pre crossover
+    if (mummy.preDNA) { // skip pre crossover
       child.dna = mummy.preDNA;
     } else {
       child.dna = crossover(mummy);
@@ -245,9 +245,11 @@ function dl_reproduceAll() {
     let historyIndex = floor(random(dl_matingPool.length));
     let history = dl_matingPool[historyIndex];
 
-    let future = new DeepLearningCar(history.experience.copy().model);
-    future.experience.mutate();
-    dl_population[i] = future;
+    if(history){
+      let future = new DeepLearningCar(history.experience.copy().model);
+      future.experience.mutate();
+      dl_population[i] = future;
+    }
   }
 
   // debug

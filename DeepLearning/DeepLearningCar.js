@@ -5,8 +5,7 @@ class DeepLearningCar extends Car {
   constructor(model) {
     super();
     this.img = dl_carImg;
-    this.preLearn = null;
-    if (model != null && model != undefined) {
+    if (model && model != undefined) {
       this.experience = new DeepLearning(4, 8, 2, model);
     } else {
       this.experience = new DeepLearning(4, 8, 2, null);
