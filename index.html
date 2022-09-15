@@ -2,16 +2,26 @@
 <html lang="en">
 
 <head>
+  <title></title>
   <script src="p5.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@2.0.0/dist/tf.min.js"></script>
-  <link rel="stylesheet" type="text/css" href="style.css">
-  <meta charset="utf-8">
+  <style>
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+    }
 
+    canvas {
+      display: block;
+    }
+  </style>
+  <meta charset="utf-8">
 </head>
 
 <body>
   <script src="Car.js"></script>
-  <script src="Checkpoints.js"></script>
+  <script src="Genetic/Checkpoints.js"></script>
   <script src="Genetic/DNA.js"></script>
   <script src="Genetic/GeneticCar.js"></script>
   <script src="DeepLearning/DeepLearning.js"></script>

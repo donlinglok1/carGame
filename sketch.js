@@ -25,10 +25,10 @@ let checkpoints;
 const DEBUG_CHECKPOINTS = false;
 
 function preload() {
-  loadJSON("checkpoints.json", setupCheckpoints);
+  loadJSON("./Genetic/checkpoints.json", setupCheckpoints);
   trackImg = loadImage('track1.png');
-  carImg = loadImage('car.png');
-  dl_carImg = loadImage('dl_car.png');
+  carImg = loadImage('./Genetic/car.png');
+  dl_carImg = loadImage('./DeepLearning/dl_car.png');
 
   loadJSON('./Genetic/best_dna.json', genCar);
 
