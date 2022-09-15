@@ -63,7 +63,8 @@ async function getDLCar() {
   dl_population = [];
 
   // load pre-train model
-  let model = await tf.loadLayersModel('./DeepLearning/best_model.json');
+  // let model = await tf.loadLayersModel('./DeepLearning/best_model.json');
+  let model = null;
   for (let i = 0; i < DL_POPULATION_COUNT; i++) {
     dl_population.push(new DeepLearningCar(model));
   }
