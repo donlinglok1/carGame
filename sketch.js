@@ -30,7 +30,7 @@ function preload() {
   carImg = loadImage('car.png');
   dl_carImg = loadImage('dl_car.png');
 
-  loadJSON('http://' + window.location.host + '/Genetic/best_dna.json', genCar);
+  loadJSON(location.protocol + '//' + window.location.host + '/Genetic/best_dna.json', genCar);
 
   getDLCar();
 }
@@ -63,7 +63,7 @@ async function getDLCar() {
   dl_population = [];
 
   // load pre-train model
-  let model = await tf.loadLayersModel('http://' + window.location.host + '/DeepLearning/best_model.json');
+  let model = await tf.loadLayersModel(location.protocol + '//' + window.location.host + '/DeepLearning/best_model.json');
   for (let i = 0; i < DL_POPULATION_COUNT; i++) {
     dl_population.push(new DeepLearningCar(model));
   }
